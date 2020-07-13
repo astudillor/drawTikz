@@ -3,8 +3,8 @@ package drawTikz
 import (
 	"fmt"
 	"regexp"
-	"strings"
 	"strconv"
+	"strings"
 )
 
 type Transformer interface {
@@ -20,18 +20,31 @@ type PointXY struct {
 	x, y float64
 }
 
-func (p *PointXY) ParseStr(data string) Error {
+func (p *PointXY) ParseStr(data string) error {
+	if p == nil {
+		p = new(PointXY)
+	}
 	re := regexp.MustCompile(`\(.*?\)`)
-	result := re.Find([]byte(data))
+	result := string(re.Find([]byte(data)))
 	if result == "" {
 		return fmt.Errorf("Error parsing PointXY %q\n", string(result))
 	}
 	v := strings.Split(string(result), ",")
-	if len(v) > 1 {
-		p.x, err := strconv.ParseFloat(v[0][1:])
+	if len(v) > 0 {
+		xstr := string(v[0][1:])
+		x, err := strconv.ParseFloat(xstr, 64)
 		if err != nil {
-			return err
+			return fmt.Errorf("Error parsing x coordinate: %s", xstr)
 		}
+		p.x = x
+	}
+	if len(v) > 1 {
+		ystr := string(v[1][:len(v[1])-1])
+		y, err := strconv.ParseFloat(ystr, 64)
+		if err != nil {
+			return fmt.Errorf("Error parsing y coordinate: %s", ystr)
+		}
+		p.y = y
 	}
 	return nil
 }
